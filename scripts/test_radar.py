@@ -1522,6 +1522,34 @@ class LanguageQuickstartsInSyncTests(unittest.TestCase):
         self.assertEqual(sorted(set(self._quickstarts()) - linked), [])
 
 
+class LanguageQuickstartShapeTests(unittest.TestCase):
+    """Every languages/*.md quickstart keeps the same shape (issue #277)."""
+
+    ROOT = Path(__file__).resolve().parent.parent
+    SECTIONS = ("## Setup", "## Common commands", "## Before you push")
+
+    def test_every_quickstart_follows_the_same_shape(self):
+        quickstarts = sorted(p for p in (self.ROOT / "languages").glob("*.md") if p.name != "README.md")
+        self.assertTrue(quickstarts, "No language quickstarts found under languages/")
+
+        for path in quickstarts:
+            with self.subTest(quickstart=path.name):
+                lines = path.read_text(encoding="utf-8").splitlines()
+                stripped = [line.strip() for line in lines if line.strip()]
+
+                self.assertRegex(
+                    stripped[0],
+                    r"^# .+ quickstart$",
+                    "must open with a '# <Name> quickstart' heading",
+                )
+                for section in self.SECTIONS:
+                    self.assertIn(section, lines, f"missing section '{section}'")
+                self.assertTrue(
+                    stripped[-1].startswith("Back to [all languages](README.md)"),
+                    "must end with the 'Back to all languages' link, nothing after it",
+                )
+
+
 class GuideChapterNavigationTests(unittest.TestCase):
     """Tests that every numbered guide chapter ends with a valid navigation link."""
 
